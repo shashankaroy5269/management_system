@@ -9,7 +9,7 @@
     "server": "cd backend && npm run dev",
     "client": "cd frontend && npm run dev",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "build": "cd frontend && npm install && npm run build"
+    "build": "node build.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

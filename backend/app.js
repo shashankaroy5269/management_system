@@ -13,7 +13,8 @@ import userRoutes from './routes/userRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 
-// Error Middleware
+// Database & Error Middleware
+import { connectDB } from './config/db.js';
 import { errorHandler, notFound } from './middlewares/errorMiddleware.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -72,6 +73,20 @@ if (process.env.NODE_ENV !== 'production') {
 // 5. Serve local static uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// 6. Database Auto-Connection Middleware for Vercel Serverless
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('[DB Middleware Error]:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Database connection failed. Please ensure MongoDB Atlas is accessible.',
+      error: err.message
+    });
+  }
+});
 
 // 7. Mount Application API Routes
 app.use('/api/auth', authRoutes);

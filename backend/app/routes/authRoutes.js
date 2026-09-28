@@ -4,8 +4,8 @@ import protect from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.post('/register', (req, res) => authController.registerUser(req, res));
-router.post('/login', (req, res) => authController.loginUser(req, res));
-router.get('/me', protect, (req, res) => authController.getProfile(req, res));
+router.post('/register', authController.registerUser);
+router.post('/login', authController.loginUser);
+router.get('/me', protect, authController.getProfile);
 
 export default router;

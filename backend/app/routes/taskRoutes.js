@@ -5,33 +5,23 @@ import checkPermission from '../middleware/permissionMiddleware.js';
 
 const router = express.Router();
 
-// Dashboard stats
-router.get('/stats', protect, (req, res) => taskController.getDashboardStats(req, res));
+// Test Route
+router.get('/test', (req, res) => {
+  res.json({
+    status: true,
+    message: 'Task Route Working',
+  });
+});
 
-// Task CRUD
-router.get('/', protect, checkPermission('read_task'), (req, res) =>
-  taskController.getTasks(req, res)
-);
+// Stats Route
+router.get('/stats', protect, taskController.getDashboardStats);
 
-router.post('/', protect, checkPermission('create_task'), (req, res) =>
-  taskController.createTask(req, res)
-);
-
-router.get('/:id', protect, checkPermission('read_task'), (req, res) =>
-  taskController.getSingleTask(req, res)
-);
-
-router.put('/:id', protect, checkPermission('update_task'), (req, res) =>
-  taskController.updateTask(req, res)
-);
-
-// Status update (allowed for Employees for their assigned tasks, and Manager/Admin)
-router.patch('/:id/status', protect, checkPermission('update_task_status'), (req, res) =>
-  taskController.updateStatus(req, res)
-);
-
-router.delete('/:id', protect, checkPermission('delete_task'), (req, res) =>
-  taskController.deleteTask(req, res)
-);
+// Main CRUD Routes with Permission Middleware
+router.post('/', protect, checkPermission('create_task'), taskController.createTask);
+router.get('/', protect, checkPermission('read_task'), taskController.getTasks);
+router.get('/:id', protect, checkPermission('read_task'), taskController.getSingleTask);
+router.put('/:id', protect, checkPermission('update_task'), taskController.updateTask);
+router.patch('/:id/status', protect, checkPermission('update_task_status'), taskController.updateStatus);
+router.delete('/:id', protect, checkPermission('delete_task'), taskController.deleteTask);
 
 export default router;

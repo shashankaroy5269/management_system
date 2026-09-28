@@ -3,3 +3,7 @@
 2026-09-28T02:59:45.690Z : User Login: employee@example.com
 2026-09-28T03:00:10.396Z : Task Status Changed: "Implement JWT Token Auth & Role Verification Middleware" to In Progress by employee@example.com
 2026-09-28T03:03:40.363Z : New User Registered: ram55@yopmail.com (Employee)
+2026-09-28T03:20:20.905Z : New User Registered: ram54@yopmail.com (Employee) - Awaiting Verification
+2026-09-28T03:20:24.017Z : Failed to send verification email to ram54@yopmail.com: Invalid login: 534-5.7.9 Please log in with your web browser and then try again. For more
+534-5.7.9 information, go to
+534 5.7.9  https://support.google.com/mail/?p=WebLoginRequired a92af1059eb24-145acc45f03sm20603193c88.7 - gsmtp

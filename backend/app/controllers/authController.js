@@ -7,7 +7,7 @@ import logger from '../utils/logger.js';
 import { sendVerificationEmail } from '../utils/emailService.js';
 
 class AuthController {
-  // 1. Register User (Sends Verification Email via Nodemailer)
+  // 1. Register User (Triggers Email Verification)
   async registerUser(req, res) {
     try {
       const { name, email, password, role, phone } = req.body;
@@ -23,7 +23,7 @@ class AuthController {
       if (existingUser) {
         return res.status(StatusCode.BAD_REQUEST).json({
           success: false,
-          message: 'User with this email already exists',
+          message: 'A user with this email already exists',
         });
       }
 
@@ -33,38 +33,37 @@ class AuthController {
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Generate verification token (valid for 24 hours)
-      const verificationToken = crypto.randomBytes(32).toString('hex');
-      const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-      const user = await User.create({
+      const user = new User({
         name,
         email: email.toLowerCase(),
         password: hashedPassword,
         role: validRole,
         phone: phone || '',
         isVerified: false,
-        verificationToken,
-        verificationTokenExpires,
       });
 
-      logger(`New User Registered: ${user.email} (${user.role}) - Awaiting Verification`);
+      // Generate crypto verification token (SHA-256 hashed in DB, raw sent via email)
+      const rawVerificationToken = user.createEmailVerificationToken();
+      await user.save();
 
       // Dispatch verification email via Nodemailer
-      sendVerificationEmail(user, verificationToken).catch((err) =>
-        console.error('[Registration Email Error]:', err.message)
-      );
+      const emailResult = await sendVerificationEmail(user, rawVerificationToken);
+
+      logger(`New User Registered: ${user.email} (${user.role}) - Verification Sent`);
 
       return res.status(StatusCode.CREATED).json({
         success: true,
-        message:
-          'Registration successful! A verification email has been sent to your inbox. Please click the link to activate your account.',
+        message: 'Registration successful! Please check your email to verify your account.',
         data: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          isVerified: false,
+          user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            isVerified: false,
+          },
+          emailSent: emailResult.success,
+          devVerificationUrl: emailResult.verifyUrl,
         },
       });
     } catch (error) {
@@ -75,40 +74,52 @@ class AuthController {
     }
   }
 
-  // 2. Verify Email Token
+  // 2. Verify User Email Token (supports /verify-email/:token and /verify-email?token=...)
   async verifyEmail(req, res) {
     try {
-      const token = req.query.token || req.body.token;
+      const token = req.params.token || req.query.token || req.body.token;
 
       if (!token) {
         return res.status(StatusCode.BAD_REQUEST).json({
           success: false,
-          message: 'Verification token is required',
+          message: 'No verification token provided in URL',
         });
       }
 
+      // Hash incoming raw token with SHA-256 to match DB record
+      const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
       const user = await User.findOne({
-        verificationToken: token,
-        verificationTokenExpires: { $gt: new Date() },
+        verificationToken: hashedToken,
+        verificationTokenExpires: { $gt: Date.now() },
       });
 
       if (!user) {
         return res.status(StatusCode.BAD_REQUEST).json({
           success: false,
-          message: 'Invalid or expired verification token. Please request a new verification email.',
+          message: 'Verification token is invalid or has expired',
         });
       }
 
       user.isVerified = true;
-      user.verificationToken = null;
-      user.verificationTokenExpires = null;
+      user.verificationToken = undefined;
+      user.verificationTokenExpires = undefined;
       await user.save();
 
-      logger(`User Verified Email: ${user.email}`);
+      logger(`User Email Verified: ${user.email}`);
 
       return res.status(StatusCode.SUCCESS).json({
         success: true,
-        message: 'Your email has been verified successfully! You can now log in to your account.',
+        message: 'Email verified successfully! Your account is now active.',
+        data: {
+          user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            isVerified: true,
+          },
+        },
       });
     } catch (error) {
       return res.status(StatusCode.SERVER_ERROR).json({
@@ -125,7 +136,7 @@ class AuthController {
       if (!email) {
         return res.status(StatusCode.BAD_REQUEST).json({
           success: false,
-          message: 'Email is required',
+          message: 'Please provide an email address',
         });
       }
 
@@ -133,27 +144,28 @@ class AuthController {
       if (!user) {
         return res.status(StatusCode.NOT_FOUND).json({
           success: false,
-          message: 'No account found with this email address',
+          message: 'No user found with this email address',
         });
       }
 
       if (user.isVerified) {
         return res.status(StatusCode.BAD_REQUEST).json({
           success: false,
-          message: 'This account is already verified. You can proceed to login.',
+          message: 'This account has already been verified',
         });
       }
 
-      const verificationToken = crypto.randomBytes(32).toString('hex');
-      user.verificationToken = verificationToken;
-      user.verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const rawToken = user.createEmailVerificationToken();
       await user.save();
 
-      await sendVerificationEmail(user, verificationToken);
+      const emailResult = await sendVerificationEmail(user, rawToken);
 
       return res.status(StatusCode.SUCCESS).json({
         success: true,
         message: 'A fresh verification link has been sent to your email address.',
+        data: {
+          devVerificationUrl: emailResult.verifyUrl,
+        },
       });
     } catch (error) {
       return res.status(StatusCode.SERVER_ERROR).json({
@@ -163,7 +175,7 @@ class AuthController {
     }
   }
 
-  // 4. Login User (Enforces Email Verification & Account Status)
+  // 4. Login User (Guards against unverified emails)
   async loginUser(req, res) {
     try {
       const { email, password } = req.body;

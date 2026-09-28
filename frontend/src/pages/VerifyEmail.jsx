@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useSearchParams, useParams, Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import AxiosInstance from '../api/axios';
 import Loader from '../components/Loader';
@@ -7,7 +7,8 @@ import { CheckCircle2, XCircle, Mail, ArrowRight, RefreshCw } from 'lucide-react
 
 const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+  const params = useParams();
+  const token = searchParams.get('token') || params.token;
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -21,22 +22,22 @@ const VerifyEmail = () => {
       verifyToken();
     } else {
       setLoading(false);
-      setMessage('No verification token provided in the link.');
+      setMessage('No verification token provided in URL.');
     }
   }, [token]);
 
   const verifyToken = async () => {
     try {
-      const response = await AxiosInstance.get(`/auth/verify-email?token=${token}`);
+      const response = await AxiosInstance.get(`/auth/verify-email/${token}`);
       if (response.data.success) {
         setSuccess(true);
-        setMessage(response.data.message || 'Your email has been verified successfully!');
+        setMessage(response.data.message || 'Email verified successfully! Your account is now active.');
       }
     } catch (error) {
       setSuccess(false);
       setMessage(
         error.response?.data?.message ||
-          'Invalid or expired verification token. Please request a new link below.'
+          'Verification token is invalid or has expired. Please request a new link below.'
       );
     } finally {
       setLoading(false);
@@ -85,7 +86,7 @@ const VerifyEmail = () => {
               <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900">Email Verified!</h2>
+              <h2 className="text-2xl font-bold text-slate-900">Account Verified!</h2>
               <p className="text-sm text-slate-600 leading-relaxed">{message}</p>
               <div className="pt-4">
                 <Link

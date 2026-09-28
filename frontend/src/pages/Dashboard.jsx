@@ -67,7 +67,7 @@ const Dashboard = () => {
         <div>
           <div className="flex items-center space-x-2">
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-              Welcome back, {user?.name}! 👋
+              Welcome back, {user?.name}! 
             </h1>
           </div>
           <p className="mt-1 text-sm text-slate-600">

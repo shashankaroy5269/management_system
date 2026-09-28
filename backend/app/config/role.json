@@ -1,0 +1,18 @@
+{
+  "Admin": [
+    "create_task",
+    "read_task",
+    "update_task",
+    "delete_task",
+    "manage_users"
+  ],
+  "Manager": [
+    "create_task",
+    "read_task",
+    "update_task"
+  ],
+  "Employee": [
+    "read_task",
+    "update_task_status"
+  ]
+}

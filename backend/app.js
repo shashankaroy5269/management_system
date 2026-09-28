@@ -9,7 +9,7 @@ import errorHandler from './app/middleware/errorMiddleware.js';
 import authRoutes from './app/routes/authRoutes.js';
 import taskRoutes from './app/routes/taskRoutes.js';
 import userRoutes from './app/routes/userRoutes.js';
-import testRoutes from './app/routes/testRoutes.js';
+
 
 dotenv.config();
 
@@ -38,7 +38,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/test', testRoutes);
+
 
 // Central Error Handler
 app.use(errorHandler);

@@ -12,6 +12,7 @@ import TaskList from './pages/TaskList';
 import AddTask from './pages/AddTask';
 import EditTask from './pages/EditTask';
 import UserList from './pages/UserList';
+import VerifyEmail from './pages/VerifyEmail';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
 
             {/* Authenticated Routes */}
             <Route

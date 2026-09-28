@@ -25,6 +25,7 @@ const seedData = async () => {
       role: 'Admin',
       phone: '+91 98765 43210',
       isActive: true,
+      isVerified: true,
     });
 
     const manager = await User.create({
@@ -34,6 +35,7 @@ const seedData = async () => {
       role: 'Manager',
       phone: '+91 98111 22334',
       isActive: true,
+      isVerified: true,
     });
 
     const employee1 = await User.create({
@@ -43,6 +45,7 @@ const seedData = async () => {
       role: 'Employee',
       phone: '+91 97234 56789',
       isActive: true,
+      isVerified: true,
     });
 
     const employee2 = await User.create({
@@ -52,6 +55,7 @@ const seedData = async () => {
       role: 'Employee',
       phone: '+91 98300 12345',
       isActive: true,
+      isVerified: true,
     });
 
     console.log('Seeding sample MERN tasks...');

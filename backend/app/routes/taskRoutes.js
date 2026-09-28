@@ -5,13 +5,7 @@ import checkPermission from '../middleware/permissionMiddleware.js';
 
 const router = express.Router();
 
-// Test Route
-router.get('/test', (req, res) => {
-  res.json({
-    status: true,
-    message: 'Task Route Working',
-  });
-});
+
 
 // Stats Route
 router.get('/stats', protect, taskController.getDashboardStats);
